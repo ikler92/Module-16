@@ -1,12 +1,21 @@
+# Обновленный код с использованием CRUD-запросов и списка users
+
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
 app = FastAPI()
 
-# Начальный словарь пользователей
-users = {"1": "Имя: Example, возраст: 18"}
+# Пустой список пользователей
+users = []
+
+# Модель User
+class User(BaseModel):
+    id: int
+    username: str
+    age: int
 
 
-# GET запрос на получение всех пользователей
+# GET запрос для получения всех пользователей
 @app.get("/users")
 async def get_users():
     return users
@@ -20,30 +29,30 @@ async def add_user(username: str, age: int):
     if age < 0 or age > 120:
         raise HTTPException(status_code=400, detail="Возраст должен быть от 0 до 120")
 
-    new_id = str(max(map(int, users.keys())) + 1)
-    users[new_id] = f"Имя: {username}, возраст: {age}"
-    return f"User {new_id} is registered"
+    new_id = users[-1].id + 1 if users else 1
+    new_user = User(id=new_id, username=username, age=age)
+    users.append(new_user)
+    return new_user
 
 
 # PUT запрос для обновления данных пользователя
 @app.put("/user/{user_id}/{username}/{age}")
-async def update_user(user_id: str, username: str, age: int):
-    if user_id not in users:
-        raise HTTPException(status_code=404, detail="Пользователь не найден")
-    if not username or not isinstance(username, str):
-        raise HTTPException(status_code=400, detail="Имя пользователя должно быть строкой")
-    if age < 0 or age > 120:
-        raise HTTPException(status_code=400, detail="Возраст должен быть от 0 до 120")
+async def update_user(user_id: int, username: str, age: int):
+    for user in users:
+        if user.id == user_id:
+            user.username = username
+            user.age = age
+            return user
 
-    users[user_id] = f"Имя: {username}, возраст: {age}"
-    return f"User {user_id} has been updated"
+    raise HTTPException(status_code=404, detail="User was not found")
 
 
 # DELETE запрос для удаления пользователя
 @app.delete("/user/{user_id}")
-async def delete_user(user_id: str):
-    if user_id not in users:
-        raise HTTPException(status_code=404, detail="Пользователь не найден")
+async def delete_user(user_id: int):
+    for user in users:
+        if user.id == user_id:
+            users.remove(user)
+            return user
 
-    del users[user_id]
-    return f"User {user_id} has been deleted"
+    raise HTTPException(status_code=404, detail="User was not found")
