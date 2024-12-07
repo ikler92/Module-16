@@ -1,5 +1,3 @@
-# Обновленный код с использованием CRUD-запросов и списка users
-
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
@@ -7,6 +5,7 @@ app = FastAPI()
 
 # Пустой список пользователей
 users = []
+
 
 # Модель User
 class User(BaseModel):
